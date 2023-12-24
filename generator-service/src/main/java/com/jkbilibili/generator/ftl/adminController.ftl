@@ -3,7 +3,7 @@ package com.jkbilibili.controller.admin;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageInfo;
-import com.jkbilibili.context.LoginMemberContext;
+import com.jkbilibili.context.LoginUserContext;
 import com.jkbilibili.req.${domain}.${Domain}QueryReq;
 import com.jkbilibili.req.${domain}.${Domain}SaveReq;
 import com.jkbilibili.res.CommonRes;

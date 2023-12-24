@@ -6,7 +6,7 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.jkbilibili.context.LoginMemberContext;
+import com.jkbilibili.context.LoginUserContext;
 import com.jkbilibili.domain.${Domain};
 import com.jkbilibili.domain.${Domain}Example;
 import com.jkbilibili.mapper.${Domain}Mapper;

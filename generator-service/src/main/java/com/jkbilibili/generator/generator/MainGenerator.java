@@ -19,7 +19,7 @@ public class MainGenerator {
 
     //    static String serverPath = "generator-service\\src\\main\\java\\com\\jktickets\\generator\\test\\";
 //   生成路径
-    static String serverPath = "[module]-service/src/main/java/com/jktickets/";
+    static String serverPath = "[module]-service/src/main/java/com/jkbilibili/";
     //   pom路径
     static String pomPath = "generator-service/pom.xml";
 
@@ -114,8 +114,8 @@ public class MainGenerator {
         gen(Domain, param, "service", "service");
         genImpl(Domain, param, "service", "serviceImpl");
 //        生成Controller
-//        gen(Domain, param, "controller", "controller");
-        gen(Domain, param, "controller/admin", "adminController");
+        gen(Domain, param, "controller", "controller");
+//        gen(Domain, param, "controller/admin", "adminController");
 
 ////        生成类
 ////        设置模板路径

@@ -4,8 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 
-import com.jkbilibili.context.LoginMemberContext;
-import com.jkbilibili.res.MemberLoginRes;
+import com.jkbilibili.context.LoginUserContext;
+import com.jkbilibili.res.UserLoginRes;
 import com.jkbilibili.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,9 +18,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * 拦截器：Spring框架特有的，常用于登录校验，权限校验，请求日志打印
  */
 @Component
-public class MemberInterceptor implements HandlerInterceptor {
+public class UserInterceptor implements HandlerInterceptor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MemberInterceptor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserInterceptor.class);
 
 
 //    拦截header 中的token
@@ -31,12 +31,12 @@ public class MemberInterceptor implements HandlerInterceptor {
         if (StrUtil.isNotBlank(token)) {
             LOG.info("获取会员登录token：{}", token);
 //            将token转成JSONObject
-            JSONObject loginMember = JwtUtil.getJSONObject(token);
-            LOG.info("当前登录会员：{}", loginMember);
+            JSONObject loginUser = JwtUtil.getJSONObject(token);
+            LOG.info("当前登录会员：{}", loginUser);
 //            JSONObject转成MemberLoginRes
-            MemberLoginRes member = JSONUtil.toBean(loginMember, MemberLoginRes.class);
+            UserLoginRes user = JSONUtil.toBean(loginUser, UserLoginRes.class);
 //            存储在线程的ThreadLocal 中去
-            LoginMemberContext.setMember(member);
+            LoginUserContext.setUser(user);
         }
         return true;
     }

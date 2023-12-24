@@ -127,6 +127,11 @@
 <!--        </dependency>-->
 
 
+<!--        加密/解密-->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
 
 
     </dependencies>
