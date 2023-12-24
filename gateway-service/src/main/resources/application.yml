@@ -1,0 +1,25 @@
+server:
+  port: 8000
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: batch
+          predicates:
+            - Path=/batch/**
+          uri: http://127.0.0.1:8003
+#          uri: lb://batch-service
+#          解决跨域
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowCredentials: true
+            allowedHeaders: '*'
+            allowedMethods: '*'
+            allowedOriginPatterns: '*'
+            maxAge: 3600
+
+
+
+
