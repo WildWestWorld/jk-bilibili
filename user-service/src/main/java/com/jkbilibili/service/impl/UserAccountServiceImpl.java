@@ -2,15 +2,19 @@ package com.jkbilibili.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.jkbilibili.domain.UserAccount;
 import com.jkbilibili.domain.UserAccountExample;
+import com.jkbilibili.exception.BusinessException;
+import com.jkbilibili.exception.BusinessExceptionEnum;
 import com.jkbilibili.mapper.UserAccountMapper;
 
 import com.jkbilibili.req.userAccount.UserAccountQueryReq;
+import com.jkbilibili.req.userAccount.UserAccountRegisterReq;
 import com.jkbilibili.req.userAccount.UserAccountSaveReq;
 import com.jkbilibili.res.PageRes;
 import com.jkbilibili.res.userAccount.UserAccountQueryRes;
@@ -37,13 +41,13 @@ public class UserAccountServiceImpl implements UserAccountService {
     public void saveUserAccount(UserAccountSaveReq req) {
 
 
-        DateTime nowTime  = DateTime.now();
+        DateTime nowTime = DateTime.now();
 
 
         UserAccount userAccount = BeanUtil.copyProperties(req, UserAccount.class);
 
 
-        if(ObjectUtil.isNull(userAccount.getId())){
+        if (ObjectUtil.isNull(userAccount.getId())) {
             //        从 线程中获取数据
 //          userAccount.setMemberId(LoginMemberContext.getId());
             userAccount.setId(SnowUtil.getSnowflakeNextId());
@@ -51,11 +55,10 @@ public class UserAccountServiceImpl implements UserAccountService {
             userAccount.setUpdateTime(nowTime);
 
             userAccountMapper.insert(userAccount);
-        }else{
+        } else {
             userAccount.setUpdateTime(nowTime);
             userAccountMapper.updateByPrimaryKeySelective(userAccount);
         }
-
 
 
     }
@@ -91,5 +94,33 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     public void deleteById(Long id) {
         userAccountMapper.deleteByPrimaryKey(id);
+    }
+
+
+    @Override
+    public long registerByMobile(UserAccountRegisterReq req) {
+        String mobile = req.getMobile();
+
+        UserAccountExample userAccountExample = new UserAccountExample();
+        //查询是否有这个手机号
+        userAccountExample.createCriteria().andMobileEqualTo(mobile);
+        List<UserAccount> userAccounts = userAccountMapper.selectByExample(userAccountExample);
+        //如果有了这个手机号,就报错
+        if (CollUtil.isNotEmpty(userAccounts)) {
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_EXIST);
+        }
+        //如果没有这个手机号就让他正常注册
+        UserAccount userAccount = new UserAccount();
+        userAccount.setId(SnowUtil.getSnowflakeNextId());
+        userAccount.setMobile(mobile);
+
+        //获取当前时间存入数据库
+        DateTime now = DateTime.now();
+        userAccount.setCreateTime(now);
+        userAccount.setUpdateTime(now);
+
+        userAccountMapper.insert(userAccount);
+
+        return userAccount.getId();
     }
 }

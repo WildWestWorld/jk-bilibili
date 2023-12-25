@@ -128,7 +128,7 @@ public class MainGenerator {
 //        FreemarkerUtil.generator(serverPath+"Test.java",param);
 
         param.put("readOnly", readOnly);
-        genVue(do_main, param,module);
+//        genVue(do_main, param,module);
 
     }
 
