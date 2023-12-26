@@ -3,12 +3,16 @@ package com.jkbilibili.controller;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.jkbilibili.req.userAccount.UserAccountRegisterReq;
+import com.jkbilibili.req.userAccount.UserAccountRegisterUserNameReq;
 import com.jkbilibili.req.userAccount.UserAccountSaveReq;
 import com.jkbilibili.res.CommonRes;
 import com.jkbilibili.service.UserAccountService;
+import com.jkbilibili.utils.RSAUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.interfaces.RSAPublicKey;
 
 @RestController
 @RequestMapping("/userAccount")
@@ -49,6 +53,23 @@ public class UserAccountController {
 //    @RequestBody 用于请求 用JSON
     public CommonRes<Long> registerByMobile(@Valid @RequestBody UserAccountRegisterReq req) {
         long mobile = userAccountService.registerByMobile(req);
+
+        return new CommonRes<>(mobile);
+    }
+
+
+    //获取公匙
+    @GetMapping("/rasPks")
+    public CommonRes<String> getRsaPublicKey() {
+        String publicKeyStr = RSAUtil.getPublicKeyStr();
+        return new CommonRes<>(publicKeyStr);
+    }
+
+
+    @PostMapping("/registerByUserName")
+//    @RequestBody 用于请求 用JSON
+    public CommonRes<Long> registerByUsername(@Valid @RequestBody UserAccountRegisterUserNameReq req) {
+        long mobile = userAccountService.registerByUserName(req);
 
         return new CommonRes<>(mobile);
     }

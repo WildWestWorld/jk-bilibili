@@ -12,7 +12,7 @@
     <artifactId>jk-bilibili</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>jk-tickets</name>
+    <name>jk-bilibili</name>
     <description>Demo project for Spring Boot</description>
     <modules>
         <module>common-service</module>
