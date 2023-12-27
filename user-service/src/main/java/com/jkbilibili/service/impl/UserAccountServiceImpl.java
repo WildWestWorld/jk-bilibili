@@ -22,6 +22,7 @@ import com.jkbilibili.res.userAccount.UserAccountQueryRes;
 
 import com.jkbilibili.service.UserAccountService;
 
+import com.jkbilibili.service.UserInfoService;
 import com.jkbilibili.utils.MD5Util;
 import com.jkbilibili.utils.RSAUtil;
 import com.jkbilibili.utils.SnowUtil;
@@ -29,6 +30,7 @@ import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -39,6 +41,9 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Resource
     UserAccountMapper userAccountMapper;
+
+    @Resource
+    UserInfoService userInfoService;
 
     @Override
     public void saveUserAccount(UserAccountSaveReq req) {
@@ -100,6 +105,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
 
+    @Transactional
     @Override
     public long registerByMobile(UserAccountRegisterReq req) {
         String mobile = req.getMobile();
@@ -124,10 +130,13 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         userAccountMapper.insert(userAccount);
 
+        userInfoService.saveDefaultUserInfo(userAccount.getId());
+
+
         return userAccount.getId();
     }
 
-
+    @Transactional
     @Override
     public long registerByUserName(UserAccountRegisterUserNameReq req) {
         String userName = req.getUsername();
@@ -148,6 +157,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         UserAccount userAccountFormat = encryptPasswordUserAccount(userAccount);
 
         userAccountMapper.insert(userAccountFormat);
+        userInfoService.saveDefaultUserInfo(userAccountFormat.getId());
 
         return userAccount.getId();
     }

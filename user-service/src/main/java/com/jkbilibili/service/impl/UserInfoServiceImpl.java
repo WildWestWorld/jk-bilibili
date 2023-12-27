@@ -4,8 +4,10 @@ import cn.hutool.core.bean.BeanUtil;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.jkbilibili.constant.UserInfoConstant;
 import com.jkbilibili.domain.UserInfo;
 import com.jkbilibili.domain.UserInfoExample;
 import com.jkbilibili.mapper.UserInfoMapper;
@@ -91,5 +93,30 @@ public class UserInfoServiceImpl implements UserInfoService {
     @Override
     public void deleteById(Long id) {
         userInfoMapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public void saveDefaultUserInfo(Long userId) {
+        UserInfo userInfo = new UserInfo();
+
+        //雪花算法生成id
+        userInfo.setId(SnowUtil.getSnowflakeNextId());
+        userInfo.setUserId(userId);
+        userInfo.setNickName(UserInfoConstant.DEFAULT_NICK);
+
+        //设置独一无二的默认名字
+        String uniqueID = RandomUtil.randomString(10);
+        userInfo.setNickName(UserInfoConstant.DEFAULT_NICK+"_"+uniqueID);
+        userInfo.setGender(UserInfoConstant.DEFAULT_GENDER);
+        userInfo.setBirth(UserInfoConstant.DEFAULT_BIRTH);
+
+
+        //设置创建时间和更新时间
+        DateTime now = DateTime.now();
+        userInfo.setCreateTime(now);
+        userInfo.setUpdateTime(now);
+
+        userInfoMapper.insert(userInfo);
+
     }
 }
