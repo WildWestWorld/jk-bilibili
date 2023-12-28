@@ -7,6 +7,7 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTPayload;
 import cn.hutool.jwt.JWTUtil;
+import com.jkbilibili.res.UserLoginRes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +22,12 @@ public class JwtUtil {
      */
     private static final String key = "Jiawa12306";
 
-    public static String createToken(Long id, String mobile) {
-        LOG.info("开始生成JWT token，id：{}，mobile：{}", id, mobile);
+    public static String createToken(UserLoginRes req) {
+        Long id = req.getId();
+        String mobile = req.getMobile();
+        String email = req.getEmail();
+        String username = req.getUsername();
+        LOG.info("开始生成JWT token，id：{}，mobile：{},email：{},username：{},", id, mobile,email,username);
         GlobalBouncyCastleProvider.setUseBouncyCastle(false);
 
         DateTime now = DateTime.now();
@@ -37,6 +42,9 @@ public class JwtUtil {
         // 内容
         payload.put("id", id);
         payload.put("mobile", mobile);
+        payload.put("email", email);
+        payload.put("username", username);
+
         String token = JWTUtil.createToken(payload, key.getBytes());
         LOG.info("生成JWT token：{}", token);
         return token;
@@ -76,7 +84,7 @@ public class JwtUtil {
     }
 
     public static void main(String[] args) {
-        createToken(1L, "123");
+//        createToken(1L, "123");
 
         String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE2NzY4OTk4MjcsIm1vYmlsZSI6IjEyMyIsImlkIjoxLCJleHAiOjE2NzY4OTk4MzcsImlhdCI6MTY3Njg5OTgyN30.JbFfdeNHhxKhAeag63kifw9pgYhnNXISJM5bL6hM8eU";
         validate(token);

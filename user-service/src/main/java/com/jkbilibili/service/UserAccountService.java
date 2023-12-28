@@ -2,11 +2,9 @@ package com.jkbilibili.service;
 
 
 import com.jkbilibili.domain.UserAccount;
-import com.jkbilibili.req.userAccount.UserAccountQueryReq;
-import com.jkbilibili.req.userAccount.UserAccountRegisterReq;
-import com.jkbilibili.req.userAccount.UserAccountRegisterUserNameReq;
-import com.jkbilibili.req.userAccount.UserAccountSaveReq;
+import com.jkbilibili.req.userAccount.*;
 import com.jkbilibili.res.PageRes;
+import com.jkbilibili.res.UserLoginRes;
 import com.jkbilibili.res.userAccount.UserAccountQueryRes;
 
 import java.util.List;
@@ -26,6 +24,12 @@ public interface UserAccountService {
 
     //加密密码
     UserAccount encryptPasswordUserAccount(UserAccount userAccount);
+
+    //手机号登录
+    UserLoginRes loginByMobile(UserAccountLoginReq req);
+
+    //根据手机号查询用户
+    UserAccount SelectMemberByMobile(String mobile);
 
 
 }

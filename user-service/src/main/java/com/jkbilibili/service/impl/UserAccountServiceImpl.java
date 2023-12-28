@@ -13,16 +13,15 @@ import com.jkbilibili.exception.BusinessException;
 import com.jkbilibili.exception.BusinessExceptionEnum;
 import com.jkbilibili.mapper.UserAccountMapper;
 
-import com.jkbilibili.req.userAccount.UserAccountQueryReq;
-import com.jkbilibili.req.userAccount.UserAccountRegisterReq;
-import com.jkbilibili.req.userAccount.UserAccountRegisterUserNameReq;
-import com.jkbilibili.req.userAccount.UserAccountSaveReq;
+import com.jkbilibili.req.userAccount.*;
 import com.jkbilibili.res.PageRes;
+import com.jkbilibili.res.UserLoginRes;
 import com.jkbilibili.res.userAccount.UserAccountQueryRes;
 
 import com.jkbilibili.service.UserAccountService;
 
 import com.jkbilibili.service.UserInfoService;
+import com.jkbilibili.utils.JwtUtil;
 import com.jkbilibili.utils.MD5Util;
 import com.jkbilibili.utils.RSAUtil;
 import com.jkbilibili.utils.SnowUtil;
@@ -145,7 +144,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         userAccountExample.createCriteria().andUsernameEqualTo(userName);
         List<UserAccount> userAccounts = userAccountMapper.selectByExample(userAccountExample);
         //如果有相同的用户名就报错
-        if(CollUtil.isNotEmpty(userAccounts)){
+        if (CollUtil.isNotEmpty(userAccounts)) {
             throw new BusinessException(BusinessExceptionEnum.MEMBER_USER_EXIST);
         }
 
@@ -182,5 +181,51 @@ public class UserAccountServiceImpl implements UserAccountService {
 
 
         return userAccount;
+    }
+
+    @Transactional
+    @Override
+    public UserLoginRes loginByMobile(UserAccountLoginReq req) {
+        String mobile = req.getMobile();
+        String code = req.getCode();
+
+        //查询我们的数据库是否有这个手机号
+        UserAccount userAccountDB = SelectMemberByMobile(mobile);
+        //如果没有这个手机号,我们直接给他提示，请先发送验证码，因为他发送验证码，我们就给他注册了
+        if(ObjectUtil.isNull(userAccountDB)){
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_NOT_EXIST);
+        }
+        //有手机号我们判别验证码是否正确
+        //如果验证码错误我们就报错
+        if(!code.equals("6666")){
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_CODE_ERROR);
+        }
+
+        //先把查询出来的用户类变成可返回结果的类
+        UserLoginRes userLoginRes = BeanUtil.copyProperties(userAccountDB, UserLoginRes.class);
+
+        //验证码正确我们就给他发送token
+
+        String token = JwtUtil.createToken(userLoginRes);
+        userLoginRes.setToken(token);
+
+
+        return userLoginRes;
+    }
+
+
+    @Override
+    public UserAccount SelectMemberByMobile(String mobile) {
+        UserAccountExample userAccountExample = new UserAccountExample();
+        userAccountExample.createCriteria().andMobileEqualTo(mobile);
+        List<UserAccount> userAccountList = userAccountMapper.selectByExample(userAccountExample);
+
+        //如果不是空的我们就返回数据,是空的我们就返回null
+        if(CollUtil.isNotEmpty(userAccountList)){
+            return userAccountList.get(0);
+        }else{
+            return null;
+        }
+
     }
 }

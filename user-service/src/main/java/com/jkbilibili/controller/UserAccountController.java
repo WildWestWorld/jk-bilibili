@@ -2,10 +2,13 @@ package com.jkbilibili.controller;
 
 
 import cn.hutool.core.util.ObjectUtil;
+import com.jkbilibili.domain.UserAccount;
+import com.jkbilibili.req.userAccount.UserAccountLoginReq;
 import com.jkbilibili.req.userAccount.UserAccountRegisterReq;
 import com.jkbilibili.req.userAccount.UserAccountRegisterUserNameReq;
 import com.jkbilibili.req.userAccount.UserAccountSaveReq;
 import com.jkbilibili.res.CommonRes;
+import com.jkbilibili.res.UserLoginRes;
 import com.jkbilibili.service.UserAccountService;
 import com.jkbilibili.utils.RSAUtil;
 import jakarta.annotation.Resource;
@@ -49,6 +52,13 @@ public class UserAccountController {
     }
 
 
+    //获取公匙
+    @GetMapping("/rasPks")
+    public CommonRes<String> getRsaPublicKey() {
+        String publicKeyStr = RSAUtil.getPublicKeyStr();
+        return new CommonRes<>(publicKeyStr);
+    }
+
     @PostMapping("/register")
 //    @RequestBody 用于请求 用JSON
     public CommonRes<Long> registerByMobile(@Valid @RequestBody UserAccountRegisterReq req) {
@@ -58,12 +68,7 @@ public class UserAccountController {
     }
 
 
-    //获取公匙
-    @GetMapping("/rasPks")
-    public CommonRes<String> getRsaPublicKey() {
-        String publicKeyStr = RSAUtil.getPublicKeyStr();
-        return new CommonRes<>(publicKeyStr);
-    }
+
 
 
     @PostMapping("/registerByUserName")
@@ -73,5 +78,12 @@ public class UserAccountController {
 
         return new CommonRes<>(mobile);
     }
+
+    @PostMapping("/login")
+    public CommonRes<UserLoginRes> loginByMobile(@Valid @RequestBody UserAccountLoginReq req){
+
+        UserLoginRes userLoginRes = userAccountService.loginByMobile(req);
+        return  new CommonRes<>(userLoginRes);
+    };
 
 }

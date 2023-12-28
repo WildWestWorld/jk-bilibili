@@ -1,6 +1,6 @@
 package com.jkbilibili.filter;
 
-import com.jkbilibili.utils.JwtUtil;
+import com.jkbilibili.utils.JwtValidUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -46,7 +46,7 @@ public class LoginMemberFilter implements Ordered, GlobalFilter {
         }
 
         // 校验token是否有效，包括token是否被改过，是否过期
-        boolean validate = JwtUtil.validate(token);
+        boolean validate = JwtValidUtil.validate(token);
         if (validate) {
             LOG.info("token有效，放行该请求");
             return chain.filter(exchange);

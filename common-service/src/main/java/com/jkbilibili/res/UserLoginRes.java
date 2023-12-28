@@ -8,6 +8,11 @@ public class UserLoginRes {
     private Long id;
 
     private String mobile;
+
+    private String Email;
+
+    private String username;
+
     private String token;
 
 
