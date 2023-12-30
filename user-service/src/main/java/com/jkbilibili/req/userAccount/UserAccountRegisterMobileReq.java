@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
-public class UserAccountRegisterReq {
+public class UserAccountRegisterMobileReq {
 
         @NotBlank(message = "【手机号】不能为空")
         //首字母为1的11为 字符

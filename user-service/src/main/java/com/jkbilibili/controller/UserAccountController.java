@@ -1,12 +1,9 @@
 package com.jkbilibili.controller;
 
 
-import cn.hutool.core.util.ObjectUtil;
-import com.jkbilibili.domain.UserAccount;
 import com.jkbilibili.req.userAccount.UserAccountLoginReq;
-import com.jkbilibili.req.userAccount.UserAccountRegisterReq;
+import com.jkbilibili.req.userAccount.UserAccountRegisterMobileReq;
 import com.jkbilibili.req.userAccount.UserAccountRegisterUserNameReq;
-import com.jkbilibili.req.userAccount.UserAccountSaveReq;
 import com.jkbilibili.res.CommonRes;
 import com.jkbilibili.res.UserLoginRes;
 import com.jkbilibili.service.UserAccountService;
@@ -15,24 +12,22 @@ import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.interfaces.RSAPublicKey;
-
 @RestController
 @RequestMapping("/userAccount")
 public class UserAccountController {
     @Resource
     UserAccountService userAccountService;
 
-    @PostMapping("/save")
-    public CommonRes<Object> saveUserAccount(@Valid @RequestBody UserAccountSaveReq req) {
-
-        userAccountService.saveUserAccount(req);
-        if (ObjectUtil.isNull(req.getId())) {
-            return new CommonRes<>("添加UserAccount成功");
-        } else {
-            return new CommonRes<>("编辑UserAccount成功");
-        }
-    }
+//    @PostMapping("/save")
+//    public CommonRes<Object> saveUserAccount(@Valid @RequestBody UserAccountSaveReq req) {
+//
+//        userAccountService.saveUserAccount(req);
+//        if (ObjectUtil.isNull(req.getId())) {
+//            return new CommonRes<>("添加UserAccount成功");
+//        } else {
+//            return new CommonRes<>("编辑UserAccount成功");
+//        }
+//    }
 
 //    @GetMapping("/queryList")
 //    public CommonRes<PageRes<UserAccountQueryRes>> queryUserAccountList(@Valid UserAccountQueryReq req) {
@@ -61,13 +56,18 @@ public class UserAccountController {
 
     @PostMapping("/register")
 //    @RequestBody 用于请求 用JSON
-    public CommonRes<Long> registerByMobile(@Valid @RequestBody UserAccountRegisterReq req) {
+    public CommonRes<Long> registerByMobile(@Valid @RequestBody UserAccountRegisterMobileReq req) {
         long mobile = userAccountService.registerByMobile(req);
 
         return new CommonRes<>(mobile);
     }
 
+    @PostMapping("/sendCode")
+    public CommonRes<String> sendCode(@Valid @RequestBody UserAccountRegisterMobileReq req){
+        userAccountService.sendCode(req);
 
+        return new CommonRes<>("短信发送成功");
+    }
 
 
 
@@ -84,6 +84,8 @@ public class UserAccountController {
 
         UserLoginRes userLoginRes = userAccountService.loginByMobile(req);
         return  new CommonRes<>(userLoginRes);
-    };
+    }
+
+
 
 }

@@ -5,8 +5,10 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.jkbilibili.constant.UserAccountConstant;
 import com.jkbilibili.domain.UserAccount;
 import com.jkbilibili.domain.UserAccountExample;
 import com.jkbilibili.exception.BusinessException;
@@ -23,15 +25,19 @@ import com.jkbilibili.service.UserAccountService;
 import com.jkbilibili.service.UserInfoService;
 import com.jkbilibili.utils.JwtUtil;
 import com.jkbilibili.utils.MD5Util;
-import com.jkbilibili.utils.RSAUtil;
 import com.jkbilibili.utils.SnowUtil;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static com.jkbilibili.constant.UserAccountConstant.SMS_INTERVAL_TIME;
 
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
@@ -43,6 +49,10 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Resource
     UserInfoService userInfoService;
+
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public void saveUserAccount(UserAccountSaveReq req) {
@@ -106,7 +116,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Transactional
     @Override
-    public long registerByMobile(UserAccountRegisterReq req) {
+    public long registerByMobile(UserAccountRegisterMobileReq req) {
         String mobile = req.getMobile();
 
         UserAccountExample userAccountExample = new UserAccountExample();
@@ -192,15 +202,18 @@ public class UserAccountServiceImpl implements UserAccountService {
         //查询我们的数据库是否有这个手机号
         UserAccount userAccountDB = SelectMemberByMobile(mobile);
         //如果没有这个手机号,我们直接给他提示，请先发送验证码，因为他发送验证码，我们就给他注册了
-        if(ObjectUtil.isNull(userAccountDB)){
+        if (ObjectUtil.isNull(userAccountDB)) {
             throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_NOT_EXIST);
         }
+
+
+
         //有手机号我们判别验证码是否正确
         //如果验证码错误我们就报错
-        if(!code.equals("6666")){
-            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_CODE_ERROR);
-        }
-
+//        if (!code.equals("6666")) {
+//            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_CODE_ERROR);
+//        }
+        verifySmsCode(req);
         //先把查询出来的用户类变成可返回结果的类
         UserLoginRes userLoginRes = BeanUtil.copyProperties(userAccountDB, UserLoginRes.class);
 
@@ -221,11 +234,78 @@ public class UserAccountServiceImpl implements UserAccountService {
         List<UserAccount> userAccountList = userAccountMapper.selectByExample(userAccountExample);
 
         //如果不是空的我们就返回数据,是空的我们就返回null
-        if(CollUtil.isNotEmpty(userAccountList)){
+        if (CollUtil.isNotEmpty(userAccountList)) {
             return userAccountList.get(0);
-        }else{
+        } else {
             return null;
         }
 
+    }
+
+
+    @Override
+    public void sendCode(UserAccountRegisterMobileReq req) {
+        String mobile = req.getMobile();
+        //查询 手机号 是否已经注册
+        UserAccount userAccountDB = SelectMemberByMobile(mobile);
+        //如果没有注册就是先给他注册
+        if (ObjectUtil.isNull(userAccountDB)) {
+            LOG.info("手机号不存在,则插入数据");
+            registerByMobile(req);
+        } else {
+            LOG.info("手机号存在,不插入数据");
+        }
+
+
+        LOG.info("保存短信记录表");
+        saveSmsRedis(req);
+    }
+
+    @Override
+    public void saveSmsRedis(UserAccountRegisterMobileReq req) {
+        String mobile = req.getMobile();
+
+        //手机发送时间 用于Redis 键值
+        String mobileLastSendTime = mobile + "-lastSendTime";
+
+        //校验手机是否允许发送短信
+        //先获取下最后发送的时间
+        String lastSendTime = stringRedisTemplate.opsForValue().get(mobileLastSendTime);
+
+
+        //如果最小时间不是空的就直接就报错 发送频率过快，因为我们设置了过期时间是一分钟
+        if (lastSendTime != null) {
+            throw new BusinessException(BusinessExceptionEnum.SMS_TOO_QUICK);
+        }
+        //        生成验证码
+        //        随机四位数的字符串
+        String code = RandomUtil.randomString(4);
+
+        LOG.info("生成短信验证码:{}", code);
+
+        // 保存手机号与验证码
+        stringRedisTemplate.opsForValue().set(mobile, code, UserAccountConstant.SMS_EXPIRE_TIME, TimeUnit.SECONDS);
+
+        // Send the SMS
+        LOG.info("生成短信验证码:{}给{}", mobile, code);
+
+        // Update the last send time
+        stringRedisTemplate.opsForValue().set(mobileLastSendTime, String.valueOf(System.currentTimeMillis()), UserAccountConstant.SMS_INTERVAL_TIME, TimeUnit.SECONDS);
+    }
+
+
+    @Override
+    public void verifySmsCode(UserAccountLoginReq req) {
+        String mobile = req.getMobile();
+        String code = req.getCode();
+        String value = stringRedisTemplate.opsForValue().get(mobile);
+        //equalsIgnoreCase 不区分大小写
+        if (value != null && value.equalsIgnoreCase(code)) {
+            //验证成功就删除对应的key
+            stringRedisTemplate.delete(mobile);
+        } else {
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_CODE_ERROR);
+
+        }
     }
 }

@@ -7,8 +7,6 @@ import com.jkbilibili.res.PageRes;
 import com.jkbilibili.res.UserLoginRes;
 import com.jkbilibili.res.userAccount.UserAccountQueryRes;
 
-import java.util.List;
-
 public interface UserAccountService {
     void saveUserAccount(UserAccountSaveReq req);
 
@@ -17,7 +15,7 @@ public interface UserAccountService {
     void deleteById(Long id);
 
     //注册
-    long registerByMobile(UserAccountRegisterReq req);
+    long registerByMobile(UserAccountRegisterMobileReq req);
 
     //注册用户
     long registerByUserName(UserAccountRegisterUserNameReq req);
@@ -31,5 +29,11 @@ public interface UserAccountService {
     //根据手机号查询用户
     UserAccount SelectMemberByMobile(String mobile);
 
+    //发送短信
+    void sendCode(UserAccountRegisterMobileReq req);
 
+    //保存发送的短信
+    void saveSmsRedis(UserAccountRegisterMobileReq req);
+    //验证手机验证码
+     void verifySmsCode(UserAccountLoginReq req);
 }

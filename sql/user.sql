@@ -38,6 +38,21 @@ CREATE TABLE `user_info`
 
 
 
+# DROP TABLE IF EXISTS `user_sms_records`;
+# CREATE TABLE `user_sms_records`
+# (
+#     `id`          bigint not null comment 'id',
+#     `mobile`      varchar(20) not null comment '手机号',
+#     `verification_code`    varchar(20)  not null comment '验证码',
+#     `sms_status`      char(1)   not null comment '验证码状态|枚举[SMSStateEnum]',
+#     `business_type` char(1)  NOT NULL comment '业务类型|枚举[BusinessTypeEnum]',
+#     sending_time datetime(3)  comment '短信发送时间',
+#     usage_time datetime(3) comment '短信使用时间',
+#     primary key (`id`)
+# ) engine=innodb default charset=utf8mb4 COMMENT='短信记录表';
+
+
+
 -- SEATA 使用到的库都得加
 -- 注意此处0.3.0+ 增加唯一索引 ux_undo_log
 CREATE TABLE `undo_log`
