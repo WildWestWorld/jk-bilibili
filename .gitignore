@@ -32,3 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 /user-service/src/main/resources/tencentCloud.properties
+/user-service/src/main/resources/tencentCloud.properties
