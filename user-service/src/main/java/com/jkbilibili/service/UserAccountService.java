@@ -33,7 +33,10 @@ public interface UserAccountService {
     void sendCode(UserAccountRegisterMobileReq req);
 
     //保存发送的短信
-    void saveSmsRedis(UserAccountRegisterMobileReq req);
+    void saveSmsRedis(String mobile,String code);
     //验证手机验证码
      void verifySmsCode(UserAccountLoginReq req);
+     //发送短信(腾讯)
+
+
 }

@@ -24,8 +24,9 @@ import com.jkbilibili.service.UserAccountService;
 
 import com.jkbilibili.service.UserInfoService;
 import com.jkbilibili.utils.JwtUtil;
-import com.jkbilibili.utils.MD5Util;
+import com.jkbilibili.utils.encrypt.MD5Util;
 import com.jkbilibili.utils.SnowUtil;
+import com.jkbilibili.utils.sms.SMSUtils;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static com.jkbilibili.constant.UserAccountConstant.SMS_INTERVAL_TIME;
 
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
@@ -50,7 +49,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Resource
     UserInfoService userInfoService;
 
-
+    @Resource
+    SMSUtils smsUtils;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
@@ -207,7 +207,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
 
 
-
         //有手机号我们判别验证码是否正确
         //如果验证码错误我们就报错
 //        if (!code.equals("6666")) {
@@ -256,14 +255,18 @@ public class UserAccountServiceImpl implements UserAccountService {
             LOG.info("手机号存在,不插入数据");
         }
 
+        //        生成验证码
+        //        随机四位数的字符串
+        String code = RandomUtil.randomNumbers(4);
 
         LOG.info("保存短信记录表");
-        saveSmsRedis(req);
+        saveSmsRedis(mobile, code);
+        smsUtils.sendSMS(mobile, code);
+
     }
 
     @Override
-    public void saveSmsRedis(UserAccountRegisterMobileReq req) {
-        String mobile = req.getMobile();
+    public void saveSmsRedis(String mobile, String code) {
 
         //手机发送时间 用于Redis 键值
         String mobileLastSendTime = mobile + "-lastSendTime";
@@ -277,9 +280,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (lastSendTime != null) {
             throw new BusinessException(BusinessExceptionEnum.SMS_TOO_QUICK);
         }
-        //        生成验证码
-        //        随机四位数的字符串
-        String code = RandomUtil.randomString(4);
+
 
         LOG.info("生成短信验证码:{}", code);
 
@@ -287,7 +288,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         stringRedisTemplate.opsForValue().set(mobile, code, UserAccountConstant.SMS_EXPIRE_TIME, TimeUnit.SECONDS);
 
         // Send the SMS
-        LOG.info("生成短信验证码:{}给{}", mobile, code);
+        LOG.info("生成短信验证码:{}给{}", code, mobile);
 
         // Update the last send time
         stringRedisTemplate.opsForValue().set(mobileLastSendTime, String.valueOf(System.currentTimeMillis()), UserAccountConstant.SMS_INTERVAL_TIME, TimeUnit.SECONDS);

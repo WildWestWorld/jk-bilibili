@@ -7,7 +7,7 @@ import com.jkbilibili.req.userAccount.UserAccountRegisterUserNameReq;
 import com.jkbilibili.res.CommonRes;
 import com.jkbilibili.res.UserLoginRes;
 import com.jkbilibili.service.UserAccountService;
-import com.jkbilibili.utils.RSAUtil;
+import com.jkbilibili.utils.encrypt.RSAUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;

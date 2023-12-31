@@ -6,6 +6,7 @@ public enum BusinessExceptionEnum {
     MEMBER_MOBILE_NOT_EXIST("请先获取短信验证码"),
     MEMBER_MOBILE_CODE_ERROR("短信验证码错误/过期"),
 
+    MEMBER_SMS_ERROR("短信验证码发送失败"),
 
     MEMBER_USER_EXIST("用户名已被注册"),
     PASSWORD_DECRYPT_ERROR("密码解密失败"),

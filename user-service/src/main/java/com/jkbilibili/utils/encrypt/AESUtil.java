@@ -1,4 +1,4 @@
-package com.jkbilibili.utils;
+package com.jkbilibili.utils.encrypt;
 
 import org.apache.tomcat.util.codec.binary.Base64;
 
