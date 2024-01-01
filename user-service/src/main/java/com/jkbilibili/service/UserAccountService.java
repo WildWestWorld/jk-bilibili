@@ -24,7 +24,10 @@ public interface UserAccountService {
     UserAccount encryptPasswordUserAccount(UserAccount userAccount);
 
     //手机号登录
-    UserLoginRes loginByMobile(UserAccountLoginReq req);
+    UserLoginRes loginByMobile(UserAccountLoginMobileReq req);
+
+     UserLoginRes loginByUserName(UserAccountLoginUserNameReq req);
+
 
     //根据手机号查询用户
     UserAccount SelectMemberByMobile(String mobile);
@@ -35,8 +38,10 @@ public interface UserAccountService {
     //保存发送的短信
     void saveSmsRedis(String mobile,String code);
     //验证手机验证码
-     void verifySmsCode(UserAccountLoginReq req);
-     //发送短信(腾讯)
+     void verifySmsCode(UserAccountLoginMobileReq req);
+
+    //根据手机号查询用户
+    UserAccount SelectMemberByUserName(String username);
 
 
 }

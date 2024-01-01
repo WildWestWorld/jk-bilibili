@@ -1,6 +1,8 @@
 package com.jkbilibili.exception;
 
 public enum BusinessExceptionEnum {
+    MEMBER_ACCOUNT_NOT_EXIST("用户不存在"),
+    MEMBER_PASSWORD_NOT_CORRECT("密码错误"),
 
     MEMBER_MOBILE_EXIST("手机号已被注册"),
     MEMBER_MOBILE_NOT_EXIST("请先获取短信验证码"),

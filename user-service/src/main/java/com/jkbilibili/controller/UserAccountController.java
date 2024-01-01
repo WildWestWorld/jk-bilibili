@@ -1,7 +1,8 @@
 package com.jkbilibili.controller;
 
 
-import com.jkbilibili.req.userAccount.UserAccountLoginReq;
+import com.jkbilibili.req.userAccount.UserAccountLoginMobileReq;
+import com.jkbilibili.req.userAccount.UserAccountLoginUserNameReq;
 import com.jkbilibili.req.userAccount.UserAccountRegisterMobileReq;
 import com.jkbilibili.req.userAccount.UserAccountRegisterUserNameReq;
 import com.jkbilibili.res.CommonRes;
@@ -80,12 +81,18 @@ public class UserAccountController {
     }
 
     @PostMapping("/login")
-    public CommonRes<UserLoginRes> loginByMobile(@Valid @RequestBody UserAccountLoginReq req){
+    public CommonRes<UserLoginRes> loginByMobile(@Valid @RequestBody UserAccountLoginMobileReq req){
 
         UserLoginRes userLoginRes = userAccountService.loginByMobile(req);
         return  new CommonRes<>(userLoginRes);
     }
 
+    @PostMapping("/loginByUsername")
+    public CommonRes<UserLoginRes> loginByMobile(@Valid @RequestBody UserAccountLoginUserNameReq req){
+
+        UserLoginRes userLoginRes = userAccountService.loginByUserName(req);
+        return  new CommonRes<>(userLoginRes);
+    }
 
 
 }

@@ -163,6 +163,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         UserAccount userAccount = new UserAccount();
         userAccount.setId(SnowUtil.getSnowflakeNextId());
         userAccount.setUsername(userName);
+        String password = req.getPassword();
+        userAccount.setPassword(password);
+
         UserAccount userAccountFormat = encryptPasswordUserAccount(userAccount);
 
         userAccountMapper.insert(userAccountFormat);
@@ -195,7 +198,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Transactional
     @Override
-    public UserLoginRes loginByMobile(UserAccountLoginReq req) {
+    public UserLoginRes loginByMobile(UserAccountLoginMobileReq req) {
         String mobile = req.getMobile();
         String code = req.getCode();
 
@@ -296,7 +299,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
 
     @Override
-    public void verifySmsCode(UserAccountLoginReq req) {
+    public void verifySmsCode(UserAccountLoginMobileReq req) {
         String mobile = req.getMobile();
         String code = req.getCode();
         String value = stringRedisTemplate.opsForValue().get(mobile);
@@ -309,4 +312,62 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         }
     }
+
+
+
+
+    @Transactional
+    @Override
+    public UserLoginRes loginByUserName(UserAccountLoginUserNameReq req) {
+        String username = req.getUsername();
+        //查询我们的数据库是否有这个手机号
+        UserAccount userAccountDB = SelectMemberByUserName(username);
+        //如果没有这个手机号,我们直接给他提示，请先发送验证码，因为他发送验证码，我们就给他注册了
+        if (ObjectUtil.isNull(userAccountDB)) {
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_ACCOUNT_NOT_EXIST);
+        }
+        String password = req.getPassword();
+        //获取盐值
+        String salt = userAccountDB.getSalt();
+
+        String md5Password = MD5Util.sign(password, salt, "UTF-8");
+        String correctPassword = userAccountDB.getPassword();
+
+        LOG.info("md5Password:{}",md5Password);
+        LOG.info("correctPassword:{}",correctPassword);
+
+        if(!md5Password.equals(correctPassword)){
+            throw  new BusinessException(BusinessExceptionEnum.MEMBER_PASSWORD_NOT_CORRECT);
+        }
+
+        //先把查询出来的用户类变成可返回结果的类
+        UserLoginRes userLoginRes = BeanUtil.copyProperties(userAccountDB, UserLoginRes.class);
+
+        //验证码正确我们就给他发送token
+
+        String token = JwtUtil.createToken(userLoginRes);
+        userLoginRes.setToken(token);
+
+
+        return userLoginRes;
+    }
+
+
+
+    @Override
+    public UserAccount SelectMemberByUserName(String username) {
+        UserAccountExample userAccountExample = new UserAccountExample();
+        userAccountExample.createCriteria().andUsernameEqualTo(username);
+        List<UserAccount> userAccountList = userAccountMapper.selectByExample(userAccountExample);
+
+        //如果不是空的我们就返回数据,是空的我们就返回null
+        if (CollUtil.isNotEmpty(userAccountList)) {
+            return userAccountList.get(0);
+        } else {
+            return null;
+        }
+
+    }
+
+
 }
