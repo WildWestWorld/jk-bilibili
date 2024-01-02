@@ -4,6 +4,8 @@ public enum BusinessExceptionEnum {
     MEMBER_ACCOUNT_NOT_EXIST("用户不存在"),
     MEMBER_PASSWORD_NOT_CORRECT("密码错误"),
 
+    MEMBER_SMS_KEY_NOT_EXIST("腾讯云短信密匙未配置,请自行创建resources/tencentCloud.properties文件，并写入tencent.cloud.secretId与tencent.cloud.secretKey的值"),
+
     MEMBER_MOBILE_EXIST("手机号已被注册"),
     MEMBER_MOBILE_NOT_EXIST("请先获取短信验证码"),
     MEMBER_MOBILE_CODE_ERROR("短信验证码错误/过期"),

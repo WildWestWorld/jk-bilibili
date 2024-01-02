@@ -35,8 +35,15 @@ public class SMSUtils {
          * 以免泄露密钥对危及你的财产安全。
          * CAM密匙查询获取: https://console.cloud.tencent.com/cam/capi
          */
+        String secretId = tencentCloudProperties.getSecretId();
+        String secretKey = tencentCloudProperties.getSecretKey();
         Credential cred = new Credential(tencentCloudProperties.getSecretId(),
                 tencentCloudProperties.getSecretKey());
+
+        if(secretId.equals("default_secret_id")||secretKey.equals("default_secret_key")){
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_SMS_KEY_NOT_EXIST);
+        }
+
 
         // 实例化一个http选项，可选的，没有特殊需求可以跳过
         HttpProfile httpProfile = new HttpProfile();

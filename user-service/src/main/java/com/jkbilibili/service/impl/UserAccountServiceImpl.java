@@ -263,8 +263,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         String code = RandomUtil.randomNumbers(4);
 
         LOG.info("保存短信记录表");
-        saveSmsRedis(mobile, code);
         smsUtils.sendSMS(mobile, code);
+        saveSmsRedis(mobile, code);
 
     }
 
