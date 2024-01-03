@@ -1,10 +1,7 @@
 package com.jkbilibili.controller;
 
 
-import com.jkbilibili.req.userAccount.UserAccountLoginMobileReq;
-import com.jkbilibili.req.userAccount.UserAccountLoginUserNameReq;
-import com.jkbilibili.req.userAccount.UserAccountRegisterMobileReq;
-import com.jkbilibili.req.userAccount.UserAccountRegisterUserNameReq;
+import com.jkbilibili.req.userAccount.*;
 import com.jkbilibili.res.CommonRes;
 import com.jkbilibili.res.UserLoginRes;
 import com.jkbilibili.service.UserAccountService;
@@ -70,7 +67,12 @@ public class UserAccountController {
         return new CommonRes<>("短信发送成功");
     }
 
+    @PostMapping("/sendEMailCode")
+    public CommonRes<String> sendEMailCode(@Valid @RequestBody UserAccountRegisterEMailReq req){
+        userAccountService.sendEMailCode(req);
 
+        return new CommonRes<>("邮箱验证码发送成功");
+    }
 
     @PostMapping("/registerByUserName")
 //    @RequestBody 用于请求 用JSON
@@ -79,6 +81,9 @@ public class UserAccountController {
 
         return new CommonRes<>(mobile);
     }
+
+
+
 
     @PostMapping("/login")
     public CommonRes<UserLoginRes> loginByMobile(@Valid @RequestBody UserAccountLoginMobileReq req){

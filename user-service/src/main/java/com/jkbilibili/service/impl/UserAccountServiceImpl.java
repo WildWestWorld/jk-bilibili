@@ -24,6 +24,7 @@ import com.jkbilibili.service.UserAccountService;
 
 import com.jkbilibili.service.UserInfoService;
 import com.jkbilibili.utils.JwtUtil;
+import com.jkbilibili.utils.email.EMailUtils;
 import com.jkbilibili.utils.encrypt.MD5Util;
 import com.jkbilibili.utils.SnowUtil;
 import com.jkbilibili.utils.sms.SMSUtils;
@@ -51,6 +52,9 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Resource
     SMSUtils smsUtils;
+    @Resource
+    EMailUtils eMailUtils;
+
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
@@ -144,6 +148,39 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         return userAccount.getId();
     }
+
+
+    @Transactional
+    @Override
+    public long registerByEMail(UserAccountRegisterEMailReq req) {
+        String email = req.getEmail();
+
+        UserAccountExample userAccountExample = new UserAccountExample();
+        //查询是否有这个手机号
+        userAccountExample.createCriteria().andEmailEqualTo(email);
+        List<UserAccount> userAccounts = userAccountMapper.selectByExample(userAccountExample);
+        //如果有了这个手机号,就报错
+        if (CollUtil.isNotEmpty(userAccounts)) {
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_EXIST);
+        }
+        //如果没有这个手机号就让他正常注册
+        UserAccount userAccount = new UserAccount();
+        userAccount.setId(SnowUtil.getSnowflakeNextId());
+        userAccount.setEmail(email);
+
+        //获取当前时间存入数据库
+        DateTime now = DateTime.now();
+        userAccount.setCreateTime(now);
+        userAccount.setUpdateTime(now);
+
+        userAccountMapper.insert(userAccount);
+
+        userInfoService.saveDefaultUserInfo(userAccount.getId());
+
+
+        return userAccount.getId();
+    }
+
 
     @Transactional
     @Override
@@ -244,7 +281,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     }
 
-
+    @Transactional
     @Override
     public void sendCode(UserAccountRegisterMobileReq req) {
         String mobile = req.getMobile();
@@ -267,6 +304,36 @@ public class UserAccountServiceImpl implements UserAccountService {
         saveSmsRedis(mobile, code);
 
     }
+
+    @Transactional
+    @Override
+    public void sendEMailCode(UserAccountRegisterEMailReq req) {
+        String email = req.getEmail();
+        //查询 手机号 是否已经注册
+        UserAccount userAccountDB = SelectMemberByEMail(email);
+        //如果没有注册就是先给他注册
+        if (ObjectUtil.isNull(userAccountDB)) {
+            LOG.info("邮箱不存在,则插入数据");
+            registerByEMail(req);
+        } else {
+            LOG.info("邮箱存在,不插入数据");
+        }
+
+        //        生成验证码
+        //        随机四位数的字符串
+        String code = RandomUtil.randomNumbers(4);
+
+        String subject = "JiKiJiKi登录验证码";
+
+        String context = "欢迎使用JiKiJiKi，登录验证码为: " + code + ",五分钟内有效，请妥善保管!";
+        LOG.info("code={}", code);
+
+        LOG.info("保存短信记录表");
+        eMailUtils.sendEMail(email, subject, context);
+        saveEMailCodeRedis(email,code);
+
+    }
+
 
     @Override
     public void saveSmsRedis(String mobile, String code) {
@@ -297,6 +364,35 @@ public class UserAccountServiceImpl implements UserAccountService {
         stringRedisTemplate.opsForValue().set(mobileLastSendTime, String.valueOf(System.currentTimeMillis()), UserAccountConstant.SMS_INTERVAL_TIME, TimeUnit.SECONDS);
     }
 
+    @Override
+    public void saveEMailCodeRedis(String email, String code) {
+
+
+            //手机发送时间 用于Redis 键值
+            String mobileLastSendTime = email + "-lastSendTime";
+
+            //校验手机是否允许发送短信
+            //先获取下最后发送的时间
+            String lastSendTime = stringRedisTemplate.opsForValue().get(mobileLastSendTime);
+
+
+            //如果最小时间不是空的就直接就报错 发送频率过快，因为我们设置了过期时间是一分钟
+            if (lastSendTime != null) {
+                throw new BusinessException(BusinessExceptionEnum.EMAIL_SEND_TOO_QUICK);
+            }
+
+
+            LOG.info("生成短信验证码:{}", code);
+
+            // 保存手机号与验证码
+            stringRedisTemplate.opsForValue().set(email, code, UserAccountConstant.SMS_EXPIRE_TIME, TimeUnit.SECONDS);
+
+            // Send the SMS
+            LOG.info("生成验证码:{}给{}", code, email);
+
+            // Update the last send time
+            stringRedisTemplate.opsForValue().set(mobileLastSendTime, String.valueOf(System.currentTimeMillis()), UserAccountConstant.SMS_INTERVAL_TIME, TimeUnit.SECONDS);
+    }
 
     @Override
     public void verifySmsCode(UserAccountLoginMobileReq req) {
@@ -313,7 +409,20 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
     }
 
+    @Override
+    public void verifyEMailCode(UserAccountLoginEMailReq req) {
+        String email = req.getEmail();
+        String code = req.getCode();
+        String value = stringRedisTemplate.opsForValue().get(email);
+        //equalsIgnoreCase 不区分大小写
+        if (value != null && value.equalsIgnoreCase(code)) {
+            //验证成功就删除对应的key
+            stringRedisTemplate.delete(email);
+        } else {
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_EMAIL_CODE_ERROR);
 
+        }
+    }
 
 
     @Transactional
@@ -333,11 +442,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         String md5Password = MD5Util.sign(password, salt, "UTF-8");
         String correctPassword = userAccountDB.getPassword();
 
-        LOG.info("md5Password:{}",md5Password);
-        LOG.info("correctPassword:{}",correctPassword);
+        LOG.info("md5Password:{}", md5Password);
+        LOG.info("correctPassword:{}", correctPassword);
 
-        if(!md5Password.equals(correctPassword)){
-            throw  new BusinessException(BusinessExceptionEnum.MEMBER_PASSWORD_NOT_CORRECT);
+        if (!md5Password.equals(correctPassword)) {
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_PASSWORD_NOT_CORRECT);
         }
 
         //先把查询出来的用户类变成可返回结果的类
@@ -352,12 +461,56 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userLoginRes;
     }
 
+    @Override
+    public UserLoginRes loginByEMail(UserAccountLoginEMailReq req) {
+        String email = req.getEmail();
 
+        //查询我们的数据库是否有这个手机号
+        UserAccount userAccountDB = SelectMemberByEMail(email);
+        //如果没有这个手机号,我们直接给他提示，请先发送验证码，因为他发送验证码，我们就给他注册了
+        if (ObjectUtil.isNull(userAccountDB)) {
+            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_NOT_EXIST);
+        }
+
+
+        //有手机号我们判别验证码是否正确
+        //如果验证码错误我们就报错
+//        if (!code.equals("6666")) {
+//            throw new BusinessException(BusinessExceptionEnum.MEMBER_MOBILE_CODE_ERROR);
+//        }
+        verifyEMailCode(req);
+        //先把查询出来的用户类变成可返回结果的类
+        UserLoginRes userLoginRes = BeanUtil.copyProperties(userAccountDB, UserLoginRes.class);
+
+        //验证码正确我们就给他发送token
+
+        String token = JwtUtil.createToken(userLoginRes);
+        userLoginRes.setToken(token);
+
+
+        return userLoginRes;
+    }
 
     @Override
     public UserAccount SelectMemberByUserName(String username) {
         UserAccountExample userAccountExample = new UserAccountExample();
         userAccountExample.createCriteria().andUsernameEqualTo(username);
+        List<UserAccount> userAccountList = userAccountMapper.selectByExample(userAccountExample);
+
+        //如果不是空的我们就返回数据,是空的我们就返回null
+        if (CollUtil.isNotEmpty(userAccountList)) {
+            return userAccountList.get(0);
+        } else {
+            return null;
+        }
+
+    }
+
+
+    @Override
+    public UserAccount SelectMemberByEMail(String email) {
+        UserAccountExample userAccountExample = new UserAccountExample();
+        userAccountExample.createCriteria().andEmailEqualTo(email);
         List<UserAccount> userAccountList = userAccountMapper.selectByExample(userAccountExample);
 
         //如果不是空的我们就返回数据,是空的我们就返回null

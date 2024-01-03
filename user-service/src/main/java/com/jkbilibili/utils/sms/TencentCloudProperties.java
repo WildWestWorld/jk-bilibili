@@ -26,7 +26,7 @@ public class TencentCloudProperties {
         try {
             // Read the configuration file
             Properties properties = new Properties();
-            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("tencentCloud1.properties");
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("tencentCloud.properties");
             properties.load(inputStream);
             // Get the property values
             secretId = properties.getProperty("tencent.cloud.secretId");

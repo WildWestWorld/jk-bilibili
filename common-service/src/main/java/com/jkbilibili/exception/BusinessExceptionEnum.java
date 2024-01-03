@@ -8,15 +8,20 @@ public enum BusinessExceptionEnum {
 
     MEMBER_MOBILE_EXIST("手机号已被注册"),
     MEMBER_MOBILE_NOT_EXIST("请先获取短信验证码"),
+    MEMBER_EMAIL_NOT_EXIST("请先获取邮件验证码"),
+
     MEMBER_MOBILE_CODE_ERROR("短信验证码错误/过期"),
+    MEMBER_EMAIL_CODE_ERROR("邮箱验证码错误/过期"),
 
     MEMBER_SMS_ERROR("短信验证码发送失败"),
+    MEMBER_EMAIL_SEND_ERROR("邮箱验证码发送失败"),
 
     MEMBER_USER_EXIST("用户名已被注册"),
     PASSWORD_DECRYPT_ERROR("密码解密失败"),
 
 
     SMS_TOO_QUICK("发送短信过快,请稍后重试"),
+    EMAIL_SEND_TOO_QUICK("发送邮箱过快,请稍后重试"),
 
     BUSINESS_STATION_NAME_UNIQUE_ERROR("车站已存在"),
     BUSINESS_TRAIN_CODE_UNIQUE_ERROR("车次编号已存在"),

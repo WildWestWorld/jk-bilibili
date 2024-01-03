@@ -143,6 +143,20 @@
             </dependency>
 
 
+            <!-- 邮件服务 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-mail</artifactId>
+                <version>3.0.0</version>
+            </dependency>
+            <!-- Thymeleaf 模版，用于发送模版邮件 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-thymeleaf</artifactId>
+                <version>3.0.0</version>
+            </dependency>
+
+
 
 
         </dependencies>
